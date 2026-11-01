@@ -1,0 +1,79 @@
+- name: Install rpmfusion gpg key
+  ansible.builtin.rpm_key:
+    key: https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-free-fedora-44
+    state: present
+
+- name: get rpmfusion nonfree gpg key
+  ansible.builtin.rpm_key:
+    key: https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-nonfree-fedora-44
+    state: present
+
+- name: add rpmfusion nonfree repo
+  ansible.builtin.dnf:
+    disable_gpg_check: yes
+    name: https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm
+    state: present
+
+- name: add rpmfusion free repo
+  ansible.builtin.dnf:
+    disable_gpg_check: yes
+    name: https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm
+    state: present
+
+- name: Update all package
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_cache: true
+    
+- name: Disable cisco repository
+  ansible.builtin.command:
+    cmd: dnf config-manager setopt fedora-cisco-openh264.enabled=0
+    changed_when: false
+
+- name: create directory for sotavpn repo
+  ansible.builtin.file:
+    path: /etc/repos/sotavpn
+    state: directory
+
+- name: create directory for yandex music repo
+  ansible.builtin.file:
+    path: /etc/repos/yandex-music
+    state: directory
+
+- name: Get sota vpn repo
+  ansible.builtin.get_url:
+    url: https://github.com/sotavpn/sotavpn-app/releases/download/v1.8.11/sotaconnect_aarch64.rpm
+    dest: /etc/repos/sotavpn/sotaconnect_aarch64.rpm
+
+- name: Get yandex music repo
+  ansible.builtin.get_url:
+    url: https://github.com/cucumber-sp/yandex-music-linux/releases/download/v5.63.1/yandex-music-5.63.1-1.x86_64.rpm
+    dest: /etc/repos/yandex-music/yandex-music-5.63.1-1.x86_64.rpm
+
+- name: install sota vpn from file
+  ansible.builtin.dnf:
+    name: /etc/repos/sotavpn/sotaconnect_aarch64.rpm
+    state: present
+
+- name: install yandex music from file
+  ansible.builtin.dnf:
+    name: /etc/repos/yandex-music/yandex-music-5.63.1-1.x86_64.rpm
+    state: present
+
+- name: Install osu from flatpak
+  ansible.builtin.command:
+    cmd: flatpak install flathub io.github.Askannz.osu -y
+    creates: /var/lib/flatpak/app/io.github.Askannz.osu
+
+- name: Install all needed apps without repos
+  ansible.builtin.dnf:
+    name:
+      - nginx
+      - firefox
+      - discord
+      - chromium
+      - telegram-desktop
+      - btop
+      - htop
+    state: present

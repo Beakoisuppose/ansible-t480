@@ -1,0 +1,6 @@
+---
+-name: Hups
+  hosts: all
+  become: true
+  roles:
+    - all
